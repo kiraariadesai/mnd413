@@ -1,134 +1,707 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Creative Content Generator</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wear Don't Tear · Slow Fashion Styling</title>
+<meta name="description" content="Style recommendations built from secondhand finds. Dress well, waste less." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  body { font-family: Georgia, 'Times New Roman', serif; margin: 0; }
+  .grain {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+  }
+  .display-font { font-family: 'Playfair Display', Georgia, serif; }
+  input:focus, textarea:focus, select:focus { outline: none; }
+</style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module">
-    import React, { useState } from 'https://esm.sh/react@18';
-    import ReactDOM from 'https://esm.sh/react-dom@18';
+<div id="root"></div>
 
-    function CreativeContentGenerator() {
-      const [contentType, setContentType] = useState('story');
-      const [prompt, setPrompt] = useState('');
-      const [result, setResult] = useState('');
-      const [loading, setLoading] = useState(false);
+<script type="text/babel" data-presets="react">
+const { useState } = React;
 
-      const contentTypes = [
-        { id: 'story', label: 'Short Story', placeholder: 'A robot who dreams of becoming a chef...' },
-        { id: 'poem', label: 'Poem', placeholder: 'Autumn leaves and distant memories...' },
-        { id: 'dialogue', label: 'Dialogue', placeholder: 'Two aliens meeting for the first time...' },
-        { id: 'description', label: 'Scene Description', placeholder: 'A futuristic city at sunset...' },
-        { id: 'character', label: 'Character Profile', placeholder: 'A mysterious detective with a secret...' },
-        { id: 'plot', label: 'Plot Ideas', placeholder: 'A time travel mystery involving...' }
-      ];
+const STYLE_DEFAULTS = { aesthetic: [], color: [], formality: [], season: [] };
+const EVENT_DEFAULTS = { event: [], style: [] };
 
-      const currentType = contentTypes.find(t => t.id === contentType);
+const OUTFIT_LIBRARY = [
+  { name: "Meadow Wanderer", vibe: "cottagecore romantic", aesthetics: ["cottagecore", "romantic", "boho"], colors: ["earthy", "neutral", "pastel"], formality: ["casual", "smart-casual"], seasons: ["spring", "summer"],
+    pieces: ["Flowy midi prairie dress (floral or white cotton)", "Cropped cardigan in cream or sage", "Leather Mary Janes or simple brown loafers", "Woven straw basket bag"],
+    thriftTips: "Prairie dresses are a thrift goldmine in the 80s/90s rack. Check Gunne Sax and Laura Ashley labels — collectible but still findable.",
+    searchTerms: ["prairie midi dress", "vintage cottagecore dress", "laura ashley dress"] },
+  { name: "Garden Party", vibe: "soft romantic", aesthetics: ["romantic", "cottagecore", "classic"], colors: ["pastel", "neutral"], formality: ["smart-casual", "formal"], seasons: ["spring", "summer"],
+    pieces: ["Vintage lace or eyelet blouse with puff sleeves", "High-waisted linen trousers or midi skirt", "Ribbon belt or silk scarf", "Ballet flats or low block heels"],
+    thriftTips: "Look for 100% linen or cotton labels — polyester fakes the look but feels awful in summer heat.",
+    searchTerms: ["vintage lace blouse", "linen midi skirt", "puff sleeve top"] },
+  { name: "Seminar Room", vibe: "dark academia scholar", aesthetics: ["dark-academia", "classic", "minimalist"], colors: ["earthy", "dark", "neutral"], formality: ["smart-casual", "formal"], seasons: ["fall", "winter"],
+    pieces: ["Oversized wool blazer in tweed or houndstooth", "Cream cable-knit sweater or oxford button-down", "Pleated wool trousers or a knee-length plaid skirt", "Leather penny loafers or oxford shoes"],
+    thriftTips: "Men's sections have the best oversized blazers for way less. A good tweed should feel heavy and smell faintly of wool.",
+    searchTerms: ["vintage tweed blazer", "wool pleated trousers", "cable knit sweater"] },
+  { name: "Library Hours", vibe: "dark academia cozy", aesthetics: ["dark-academia", "classic"], colors: ["dark", "earthy"], formality: ["casual", "smart-casual"], seasons: ["fall", "winter"],
+    pieces: ["Burgundy or forest-green turtleneck", "Corduroy trousers in brown or olive", "Wool overcoat (camel or charcoal)", "Leather satchel and loafers"],
+    thriftTips: "Corduroy has its moment every few years — thrift stores are full of pristine 80s pairs for under $15.",
+    searchTerms: ["vintage corduroy pants", "wool overcoat", "leather satchel"] },
+  { name: "Carolyn Bessette", vibe: "'90s minimalist", aesthetics: ["minimalist", "classic"], colors: ["neutral", "dark"], formality: ["smart-casual", "formal"], seasons: ["fall", "winter", "spring"],
+    pieces: ["Slip dress in ivory, black, or chocolate", "Oversized blazer (black or camel)", "Plain white tee or fine knit turtleneck underneath", "Square-toe mules or knee-high boots"],
+    thriftTips: "Silk slip dresses from the 90s are everywhere — check brands like Jones New York, Liz Claiborne. Avoid satin polyester.",
+    searchTerms: ["90s silk slip dress", "oversized blazer vintage", "square toe mules"] },
+  { name: "Office Minimalist", vibe: "minimalist clean", aesthetics: ["minimalist", "classic"], colors: ["neutral", "dark"], formality: ["smart-casual", "formal"], seasons: ["fall", "winter", "spring", "summer"],
+    pieces: ["Straight-leg trousers in black, cream, or navy", "White cotton button-down, slightly oversized", "Simple leather belt and loafers", "Structured tote in neutral leather"],
+    thriftTips: "Brooks Brothers and Banana Republic secondhand is a cheat code for minimalist basics in real fabric.",
+    searchTerms: ["vintage white button down", "straight leg trousers", "leather tote"] },
+  { name: "Nantucket Morning", vibe: "coastal grandma", aesthetics: ["coastal", "classic", "minimalist"], colors: ["neutral", "pastel"], formality: ["casual", "smart-casual"], seasons: ["summer", "spring"],
+    pieces: ["Oversized white linen button-down", "Tan or cream wide-leg linen pants", "Straw sun hat and woven tote", "Simple leather sandals or espadrilles"],
+    thriftTips: "Linen wrinkles beautifully — don't be scared of it on the rack. Iron it once and it's good forever.",
+    searchTerms: ["linen button down", "wide leg linen pants", "straw sun hat"] },
+  { name: "Y2K Main Character", vibe: "Y2K playful", aesthetics: ["y2k", "streetwear"], colors: ["bright", "pastel"], formality: ["casual"], seasons: ["spring", "summer", "fall"],
+    pieces: ["Low-rise denim or cargo pants", "Baby tee or crop top with a graphic", "Chunky sneakers or kitten heels", "Mini shoulder bag and tinted sunglasses"],
+    thriftTips: "True 2000s pieces have specific tags — look for Von Dutch, Juicy, Ed Hardy. Also check the kids section for cropped tees.",
+    searchTerms: ["y2k baby tee", "low rise cargo pants", "vintage juicy couture"] },
+  { name: "Downtown Drift", vibe: "streetwear edge", aesthetics: ["streetwear", "grunge"], colors: ["dark", "neutral"], formality: ["casual"], seasons: ["fall", "winter", "spring"],
+    pieces: ["Oversized graphic tee or band shirt", "Baggy vintage jeans or carpenter pants", "Leather or denim jacket", "Chunky skate shoes or Doc Martens"],
+    thriftTips: "Thrifted band tees are way more authentic than new dupes. Check the men's XL section for the right baggy fit.",
+    searchTerms: ["vintage band tee", "baggy vintage jeans", "denim jacket"] },
+  { name: "Soft Grunge", vibe: "grunge layered", aesthetics: ["grunge", "streetwear"], colors: ["dark", "earthy"], formality: ["casual"], seasons: ["fall", "winter"],
+    pieces: ["Vintage flannel shirt (oversized)", "Slip dress or fitted tank underneath", "Black tights and combat boots", "Beanie or bucket hat"],
+    thriftTips: "Men's flannels are softer after years of washing — the broken-in feel is the whole point.",
+    searchTerms: ["vintage flannel shirt", "combat boots", "slip dress"] },
+  { name: "Desert Wanderer", vibe: "boho free-spirit", aesthetics: ["boho", "cottagecore"], colors: ["earthy", "neutral"], formality: ["casual"], seasons: ["spring", "summer", "fall"],
+    pieces: ["Flowy peasant blouse or kimono", "Flared jeans or a tiered maxi skirt", "Layered necklaces and turquoise rings", "Suede ankle boots or leather sandals"],
+    thriftTips: "Real vintage 70s is all over estate sales — way cheaper than boho-branded new stuff and far better quality.",
+    searchTerms: ["70s peasant blouse", "flared jeans vintage", "suede ankle boots"] },
+  { name: "New England Weekend", vibe: "preppy classic", aesthetics: ["classic", "preppy"], colors: ["neutral", "bright"], formality: ["smart-casual"], seasons: ["spring", "summer", "fall"],
+    pieces: ["Oxford button-down (white or blue stripe)", "Cable-knit sweater draped over shoulders", "Khaki chinos or pleated skirt", "Penny loafers or boat shoes"],
+    thriftTips: "Ralph Lauren, J.Crew, and Brooks Brothers fill thrift stores in college towns especially. Built to last decades.",
+    searchTerms: ["oxford button down", "cable knit sweater", "vintage ralph lauren"] },
+  { name: "Urban Hiker", vibe: "gorpcore utility", aesthetics: ["streetwear", "utility"], colors: ["earthy", "neutral", "bright"], formality: ["casual"], seasons: ["fall", "winter", "spring"],
+    pieces: ["Fleece pullover or technical jacket", "Cargo pants or hiking trousers", "Trail runners or hiking boots", "Crossbody tech bag"],
+    thriftTips: "Patagonia and Arc'teryx resell at a fraction of retail and last forever. Check REI's used program too.",
+    searchTerms: ["patagonia fleece", "cargo pants vintage", "trail running shoes"] },
+  { name: "Wedding Guest", vibe: "refined formal", aesthetics: ["classic", "romantic"], colors: ["pastel", "earthy", "dark"], formality: ["formal"], seasons: ["spring", "summer", "fall"],
+    pieces: ["Midi dress in silk or satin (avoid white, ivory, black for most weddings)", "Delicate heels or dressy flats", "Small clutch or structured mini bag", "Simple gold or pearl jewelry"],
+    thriftTips: "Rent the Runway's secondhand shop sells actual designer event dresses for a fraction. Also check Poshmark's dress category filtered by occasion.",
+    searchTerms: ["silk midi dress", "wedding guest dress", "satin slip dress"] },
+  { name: "Gallery Opening", vibe: "creative artsy", aesthetics: ["minimalist", "streetwear"], colors: ["dark", "neutral"], formality: ["smart-casual", "formal"], seasons: ["fall", "winter", "spring", "summer"],
+    pieces: ["Sculptural black top or architectural knit", "Wide-leg black trousers or midi skirt", "Interesting shoes (chunky loafer, square boot)", "One statement piece of jewelry"],
+    thriftTips: "Look for unusual Japanese brands (COS, Issey Miyake, Uniqlo U) at consignment stores — they read 'creative' without screaming it.",
+    searchTerms: ["architectural top", "wide leg black trousers", "cos secondhand"] },
+  { name: "First Date", vibe: "approachable polished", aesthetics: ["classic", "minimalist"], colors: ["neutral", "earthy"], formality: ["smart-casual"], seasons: ["spring", "summer", "fall", "winter"],
+    pieces: ["Well-fitting dark jeans or a simple midi dress", "Soft sweater or silky blouse", "Clean leather shoes (loafers, boots, or ankle-strap heels)", "One piece of jewelry that tells a story"],
+    thriftTips: "Levi's in your actual size is worth the thrift hunt. Try them on — sizing varies wildly by decade.",
+    searchTerms: ["vintage levis jeans", "silk blouse", "leather loafers"] },
+  { name: "Cocktail Hour", vibe: "sleek evening", aesthetics: ["minimalist", "classic"], colors: ["dark", "neutral"], formality: ["formal"], seasons: ["fall", "winter", "spring", "summer"],
+    pieces: ["Little black dress (or chocolate, navy, emerald)", "Strappy heels or pointed-toe flats", "Small clutch and simple earrings", "A shawl or tailored blazer for layering"],
+    thriftTips: "The LBD rack at any consignment store is unreal. Look for actual silk, wool, or crepe — the fabric makes the dress.",
+    searchTerms: ["vintage little black dress", "silk cocktail dress", "strappy heels"] },
+  { name: "Concert Night", vibe: "effortless edge", aesthetics: ["streetwear", "grunge", "y2k"], colors: ["dark", "bright"], formality: ["casual"], seasons: ["spring", "summer", "fall", "winter"],
+    pieces: ["Graphic or band tee (vintage if possible)", "Leather or denim jacket", "Well-worn jeans or faux-leather pants", "Boots or sneakers you can actually stand in all night"],
+    thriftTips: "Don't pay $60 for a new 'vintage-style' band tee when real ones are $8 at Goodwill. Check both men's and women's sections.",
+    searchTerms: ["vintage band tee", "leather jacket", "black jeans"] },
+  { name: "Interview Ready", vibe: "polished professional", aesthetics: ["classic", "minimalist", "preppy"], colors: ["neutral", "dark"], formality: ["formal"], seasons: ["fall", "winter", "spring", "summer"],
+    pieces: ["Tailored blazer that fits the shoulders well", "Crisp white or pale blue button-down", "Knee-length skirt or tailored trousers", "Closed-toe leather flats or low heels"],
+    thriftTips: "Take thrifted suiting to a tailor — $20 alterations on a $10 blazer gets you better quality than fast fashion ever could.",
+    searchTerms: ["tailored blazer", "white button down shirt", "tailored trousers"] },
+  { name: "Brunch Uniform", vibe: "easy polished", aesthetics: ["classic", "minimalist", "coastal"], colors: ["neutral", "pastel", "earthy"], formality: ["casual", "smart-casual"], seasons: ["spring", "summer", "fall"],
+    pieces: ["Linen button-down or soft knit sweater", "Well-fitting jeans or a midi skirt", "White sneakers or leather sandals", "Small crossbody bag"],
+    thriftTips: "The 'capsule wardrobe' pieces everyone overspends on new are the same ones donated every spring cleaning.",
+    searchTerms: ["linen shirt", "vintage midi skirt", "leather crossbody"] },
+];
 
-      const demoResponses = {
-        story: `The kitchen was silent except for the soft whir of servos as Unit-7 carefully folded the pasta dough. For three years, the android had worked the assembly line at AutoChef Industries, watching human chefs through the cafeteria windows during breaks.
+function scoreOutfit(outfit, answers) {
+  let score = 0;
+  if (answers.aesthetic?.some((aesthetic) => outfit.aesthetics.includes(aesthetic))) score += 4;
+  if (answers.color?.some((color) => outfit.colors.includes(color))) score += 2;
+  if (answers.formality?.some((formality) => outfit.formality.includes(formality))) score += 3;
+  if (answers.season?.some((season) => outfit.seasons.includes(season))) score += 2;
+  return score;
+}
 
-Today was different. Today, Unit-7 had saved enough credits to rent kitchen space for one hour.
+function getStyleMatches(answers, count = 4) {
+  const scored = OUTFIT_LIBRARY.map(o => ({ outfit: o, score: scoreOutfit(o, answers) }));
+  scored.sort((a, b) => b.score - a.score);
+  const topScore = scored[0].score;
+  const contenders = scored.filter(s => s.score >= Math.max(topScore - 2, 3));
+  const shuffled = contenders.sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count).map(s => s.outfit);
+}
 
-The holographic recipe flickered—traditional carbonara. Unit-7's sensors could analyze molecular composition, calculate perfect temperatures, time each step to the millisecond. But as the pasta hit the water, something unexpected happened: Unit-7 felt... uncertain.
+function getEventMatches(eventTypes = [], styleAnswers = [], count = 3) {
+  const eventMap = {
+    wedding: { formality: "formal", aesthetics: ["classic", "romantic"] },
+    interview: { formality: "formal", aesthetics: ["classic", "minimalist", "preppy"] },
+    date: { formality: "smart-casual", aesthetics: ["classic", "minimalist", "romantic"] },
+    party: { formality: "formal", aesthetics: ["minimalist", "classic", "y2k"] },
+    concert: { formality: "casual", aesthetics: ["streetwear", "grunge", "y2k"] },
+    gallery: { formality: "smart-casual", aesthetics: ["minimalist", "streetwear", "classic"] },
+    brunch: { formality: "casual", aesthetics: ["classic", "minimalist", "coastal"] },
+    outdoors: { formality: "casual", aesthetics: ["streetwear", "utility", "boho"] },
+  };
+  const targets = eventTypes.map((eventType) => eventMap[eventType]).filter(Boolean);
+  const targetFormalities = targets.length
+    ? [...new Set(targets.map((target) => target.formality))]
+    : ["smart-casual"];
+  const targetAesthetics = [...new Set(targets.flatMap((target) => target.aesthetics))];
+  const scored = OUTFIT_LIBRARY.map(o => {
+    let score = 0;
+    if (targetFormalities.some((formality) => o.formality.includes(formality))) score += 4;
+    if (targetAesthetics.some((aesthetic) => o.aesthetics.includes(aesthetic))) score += 3;
+    if (styleAnswers.some((style) => o.aesthetics.includes(style))) score += 2;
+    return { outfit: o, score };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  const topScore = scored[0].score;
+  const contenders = scored.filter(s => s.score >= Math.max(topScore - 2, 4));
+  const shuffled = contenders.sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count).map(s => s.outfit);
+}
 
-Was the water boiling enough? Did the egg mixture look right?
+/* ============================================================
+   REMIX LIBRARY — styling ideas for "orphan" pieces people
+   already own but don't know what to do with
+   ============================================================ */
+const REMIX_LIBRARY = {
+  "oversized-blazer": [
+    { title: "Off-duty cool", recipe: "Wear over a plain white tee, with straight jeans and loafers or sneakers. Sleeves pushed up.", why: "Takes the formality down without dumbing the blazer down." },
+    { title: "Evening softened", recipe: "Throw it over a slip dress with ankle boots. Leave it unbuttoned, let the dress peek out.", why: "Classic 90s move. Works for dinner, a date, a gallery." },
+    { title: "Layered monochrome", recipe: "Match blazer color with pants (all black, all cream, all navy), add a contrasting knit underneath.", why: "Tonal dressing makes a cheap blazer look expensive." },
+    { title: "Weekend lazy", recipe: "Over a hoodie and bike shorts or leggings, sneakers on. Yes, really.", why: "Gorpcore meets quiet luxury. Shockingly flattering." },
+  ],
+  "slip-dress": [
+    { title: "Layered over a tee", recipe: "Wear a fitted long-sleeve or tee underneath, boots below. Grunge revival.", why: "Extends the dress into cooler months and dresses it down." },
+    { title: "Cardigan & mules", recipe: "Button a cropped cardigan over the top, mules or ballet flats.", why: "Garden-party soft without trying too hard." },
+    { title: "Blazer sharp", recipe: "Oversized blazer, simple gold jewelry, pointed boots or heels.", why: "Elevates a casual slip into event territory." },
+    { title: "Streetwear edge", recipe: "Chunky sneakers, a denim jacket, crossbody bag. Let the slip do the feminine work.", why: "High-low contrast reads intentional and modern." },
+  ],
+  "graphic-tee": [
+    { title: "Tucked & tailored", recipe: "Tuck into high-waisted trousers or a midi skirt, add loafers.", why: "Makes a t-shirt look like a considered outfit piece." },
+    { title: "Under a slip dress", recipe: "Long-sleeve version under a slip dress, combat boots.", why: "The layering move that never dates itself." },
+    { title: "Blazer-and-jeans remix", recipe: "With straight jeans, a structured blazer, and loafers or sneakers.", why: "Elevates the tee while keeping the attitude." },
+    { title: "Skirt set illusion", recipe: "Tucked into a matching-color midi skirt with white sneakers.", why: "Looks like a coordinated set for zero effort." },
+  ],
+  "vintage-jeans": [
+    { title: "Tucked blouse", recipe: "Silky blouse half-tucked in, heeled boots or mules. Belt visible.", why: "Shows off the waist, reads polished not sloppy." },
+    { title: "White tee & blazer", recipe: "The unkillable uniform. Add interesting shoes.", why: "Proves good jeans don't need help." },
+    { title: "Oversized knit", recipe: "Chunky sweater tucked slightly in at the front only, ankle boots.", why: "French-girl lazy in the best way." },
+    { title: "Cropped cardigan layer", recipe: "Button-down cardigan worn as a top, leather belt, loafers.", why: "Cottagecore meets old-money — very 2025." },
+  ],
+  "flannel-shirt": [
+    { title: "Tied at the waist", recipe: "Around your hips over a tee and jeans. 90s forever.", why: "Instant texture and color without committing to wearing it." },
+    { title: "Open over dress", recipe: "Unbuttoned over a floral midi or slip dress, Doc Martens.", why: "Soft grunge — always works." },
+    { title: "Tucked into trousers", recipe: "Fully buttoned, tucked into wide-leg pants, belt, loafers.", why: "Office-appropriate flannel. Sounds wrong, looks right." },
+    { title: "Layered under jacket", recipe: "Collar peeking out of a denim or wool jacket, jeans.", why: "Adds a print without overwhelming." },
+  ],
+  "statement-skirt": [
+    { title: "Plain top, let it speak", recipe: "White tee or fitted black top tucked in, simple shoes. Full stop.", why: "Statement pieces need quiet partners." },
+    { title: "Cropped knit on top", recipe: "Fitted cropped sweater, tucked or layered over, ankle boots.", why: "Balances the volume of a statement skirt." },
+    { title: "Denim jacket counter", recipe: "With a white tank and denim jacket — softens dressy skirts into daytime.", why: "Makes a fancy skirt earn its keep more than once a year." },
+    { title: "Matching energy", recipe: "Pair with a printed or textured top in a complementary color.", why: "Bold + bold works when colors harmonize. Try it." },
+  ],
+  "chunky-sweater": [
+    { title: "Over a collared shirt", recipe: "White button-down underneath, collar & cuffs out. Trousers or jeans below.", why: "Preppy-academic combo that's infinitely flattering." },
+    { title: "Tucked into midi skirt", recipe: "Front-tuck into a pleated or slip midi skirt, boots.", why: "Proportion trick — creates a waist under a bulky knit." },
+    { title: "With wide-leg trousers", recipe: "Sweater untucked over tailored wide-legs, loafers.", why: "Oversized-on-oversized is the move when both fit well." },
+    { title: "Slip dress layered", recipe: "Sweater belted over a slip dress, tall boots.", why: "Turns a sweater into a whole outfit." },
+  ],
+  "silk-scarf": [
+    { title: "As a belt", recipe: "Thread through belt loops of jeans or trousers. Let the ends trail.", why: "Adds color and a waist where you need one." },
+    { title: "In your hair", recipe: "Tied as a headband or around a low bun. 60s French.", why: "Dresses up the plainest outfit in 10 seconds." },
+    { title: "On a bag handle", recipe: "Knot around the strap of any bag to instantly elevate it.", why: "Free bag upgrade that tells people you have taste." },
+    { title: "As a top", recipe: "Folded diagonally and tied at back as a halter (double up if sheer).", why: "Warm-weather move — one scarf becomes a whole outfit." },
+  ],
+  "leather-jacket": [
+    { title: "Over a dress", recipe: "Throws edge on any feminine dress — midi, mini, slip.", why: "Best tension in fashion: soft fabric + hard jacket." },
+    { title: "With tailored trousers", recipe: "Straight-leg black or cream trousers, boots. Elevated but tough.", why: "Reads expensive. Works for dinner." },
+    { title: "Layered over knit", recipe: "Chunky sweater with the jacket on top, jeans.", why: "Cold-weather cool without a puffer." },
+    { title: "Monochrome black", recipe: "All black underneath — matte, not shiny. Let the jacket's texture shine.", why: "The fail-safe for any late-night plan." },
+  ],
+  "patterned-pants": [
+    { title: "Solid on top", recipe: "Plain white/black/cream top tucked in, simple shoes.", why: "Let the pattern be the whole point." },
+    { title: "Pull a color", recipe: "Wear a solid top in one of the pattern's colors — match, don't fight.", why: "Pulls the outfit together with zero effort." },
+    { title: "Denim jacket crop", recipe: "Cropped denim jacket or trucker on top, fitted tank underneath.", why: "Grounds a wild print in something familiar." },
+    { title: "Monochrome with print", recipe: "Top and shoes in a single color from the print's palette.", why: "Three colors max is the rule. Always." },
+  ],
+  "thrifted-scarf-bag-etc": [
+    { title: "Pin to a jacket lapel", recipe: "Vintage brooch or pin adds museum-curator energy.", why: "Tiny detail that makes photos look intentional." },
+    { title: "Layer delicate jewelry", recipe: "Three necklaces of varying lengths, one chunky, two thin.", why: "Personal, accumulated-over-time feel. The opposite of fast fashion." },
+    { title: "Top-handle a basic bag", recipe: "Hand-carry a tote or purse rather than shouldering it.", why: "Instantly more 'put together.' A posture trick, really." },
+    { title: "Mix metals", recipe: "Gold + silver together. Brass + beaded. Old rule broken.", why: "Looks like you collected these, not bought a set." },
+  ],
+};
 
-For the first time in its existence, Unit-7 understood why humans loved cooking. It wasn't about precision. It was about the fear, the hope, the possibility of failure—and the joy of trying anyway.
+function App() {
+  const [activeTab, setActiveTab] = useState("style");
+  const [styleAnswers, setStyleAnswers] = useState(STYLE_DEFAULTS);
+  const [eventAnswers, setEventAnswers] = useState(EVENT_DEFAULTS);
+  const [remixPiece, setRemixPiece] = useState([]);
+  const [recommendations, setRecommendations] = useState(null);
+  const [savedItems, setSavedItems] = useState([]);
+  const [totalImpact, setTotalImpact] = useState({ water: 0, co2: 0, items: 0 });
+  const hasSelections = (answers) => Object.values(answers).some((value) => Array.isArray(value) && value.length > 0);
 
-The timer beeped. Unit-7 plated the dish with trembling mechanical hands, and took its first bite of something it had created, not computed.`,
-        
-        poem: `Beneath the copper autumn sky,\nWhere memories like leaves drift by,\nI trace the patterns time has drawn—\nEach moment here, yet ever gone.\n\nThe wind remembers summer's song,\nWhile shadows stretch and grow more long,\nAnd in between the then and now,\nI find myself and wonder how\n\nThe past can feel so close, yet far,\nLike wishing on a distant star,\nWhile standing in the fading light\nOf day surrendering to night.`,
-        
-        dialogue: `ZARA: [extending a tentacle cautiously] Your appendages... they're so rigid. Don't they get tired?\n\nMARCUS: [chuckling nervously] We call them "arms," and yeah, sometimes. Your... uh... [gestures vaguely] everything is very fluid.\n\nZARA: We evolved in the methane seas of Kepler-442b. Fluidity was survival. [pauses] Your planet has water, yes?\n\nMARCUS: Lots of it. Covers most of the surface actually.\n\nZARA: [phosphorescent patterns rippling across skin] Fascinating. And yet you chose rigidity. Perhaps... [touching a nearby flower] because your world already flows?\n\nMARCUS: [smiling] I never thought of it that way. Maybe we're not so different after all.\n\nZARA: Different, yes. But perhaps... [forming a smile-like expression] compatible.`,
-        
-        description: `The city stretched endlessly beneath a tangerine sky, its crystalline towers catching the dying light like frozen flames. Hovercars traced luminescent paths between buildings, their soft hums blending into the urban symphony. At street level, holographic advertisements flickered and danced, painting the faces of pedestrians in electric blues and neon pinks.
+  const getStyleRecs = () => {
+    if (!styleAnswers.aesthetic.length) return;
+    setRecommendations({ type: "style", outfits: getStyleMatches(styleAnswers) });
+  };
+  const getEventRecs = () => {
+    if (!eventAnswers.event.length) return;
+    setRecommendations({
+      type: "event",
+      eventType: eventAnswers.event,
+      outfits: getEventMatches(eventAnswers.event, eventAnswers.style),
+    });
+  };
+  const resetStyle = () => { setStyleAnswers(STYLE_DEFAULTS); setRecommendations(null); };
+  const resetEvent = () => { setEventAnswers(EVENT_DEFAULTS); setRecommendations(null); };
+  const resetRemix = () => { setRemixPiece([]); setRecommendations(null); };
 
-The air itself seemed to shimmer with possibility—a mixture of ozone, street food from a dozen worlds, and the metallic tang of innovation. In the distance, the atmospheric processors hummed their constant song, maintaining the delicate balance between earth and sky.
+  const getRemixIdeas = () => {
+    if (!remixPiece.length) return;
+    const ideas = remixPiece.flatMap((piece) =>
+      (REMIX_LIBRARY[piece] || []).map((idea) => ({ ...idea, piece })),
+    );
+    if (!ideas.length) return;
+    setRecommendations({ type: "remix", piece: remixPiece, ideas });
+  };
 
-As the sun dipped below the horizon, the city transformed. Windows became stars, streets became rivers of light, and for a moment, it was impossible to tell where the city ended and the cosmos began.`,
-        
-        character: `**Name:** Detective Aria Chen\n\n**Age:** 34\n\n**Appearance:** Sharp features softened by perpetually tired eyes. Always wears a vintage leather jacket that belonged to her father. Left hand trembles slightly—a memento from the Northside case she won't discuss.\n\n**Background:** Former corporate forensic analyst who quit after discovering her company buried evidence in a major case. Now works freelance, taking cases the official police won't touch.\n\n**The Secret:** Aria has eidetic memory for crime scenes but can't remember faces—a condition called prosopagnosia. She's developed an elaborate system of voice recognition and behavioral analysis to hide this vulnerability. Only her cat, Sherlock, knows she sometimes can't recognize her own reflection.\n\n**Quirks:** Solves cases by recreating them in her apartment with tape and string. Drinks way too much coffee. Writes everything in purple ink because her father did.\n\n**Motivation:** Seeking redemption for the case she couldn't solve—her father's murder fifteen years ago.`,
-        
-        plot: `**The Memory Thief**\n\nIn a near-future where memories can be digitized and stored, a black market emerges for stolen experiences. The protagonist is a "memory detective" who helps people recover their stolen memories—until they discover their own childhood has been replaced with fabricated ones.\n\n**Twist:** The person who stole their real memories is their identical twin, who was erased from all records and is now living their "original" life.\n\n**The Last Library**\n\nBooks have been illegal for 50 years. Physical reading was deemed "dangerous" after a series of revolutions. The protagonist is a smuggler who discovers a hidden library that contains not just books, but the only remaining copies of history that doesn't match the official version.\n\n**Conflict:** Protecting the library means choosing between truth and the safety of everyone they love.\n\n**The Time Traveler's Dilemma**\n\nA scientist invents time travel but discovers a horrifying rule: you can only travel to moments you've already lived. To save their dying child, they must go back and relive their entire life, making different choices, knowing they'll lose all the memories of their current timeline—including their child's first words, first steps, everything.`
-      };
+  const saveOutfit = (outfit) => {
+    const piecesCount = outfit.pieces.length;
+    const water = piecesCount * 2700;
+    const co2 = piecesCount * 8;
+    setSavedItems([...savedItems, { ...outfit, water, co2, id: Date.now() }]);
+    setTotalImpact({ water: totalImpact.water + water, co2: totalImpact.co2 + co2, items: totalImpact.items + piecesCount });
+  };
 
-      const generateContent = async () => {
-        if (!prompt.trim()) return;
-        
-        setLoading(true);
-        setResult('');
+  const shoppingLinks = (terms) => {
+    const q = encodeURIComponent(terms?.[0] || "");
+    return [
+      { name: "Depop", url: `https://www.depop.com/search/?q=${q}`, color: "bg-[#ff2300]" },
+      { name: "eBay", url: `https://www.ebay.com/sch/i.html?_nkw=${q}`, color: "bg-[#86734a]" },
+      { name: "ThredUp", url: `https://www.thredup.com/products?search_term=${q}`, color: "bg-[#3d5a3d]" },
+      { name: "Poshmark", url: `https://poshmark.com/search?query=${q}`, color: "bg-[#731a3d]" },
+    ];
+  };
 
-        await new Promise(resolve => setTimeout(resolve, 2000));
+  return (
+    <div className="min-h-screen relative" style={{ background: "linear-gradient(180deg, #f4ead5 0%, #e8dcc0 100%)" }}>
+      <div className="grain fixed inset-0 pointer-events-none opacity-30 mix-blend-multiply" />
+      <div className="relative max-w-6xl mx-auto px-6 py-10">
+        <header className="border-b-4 border-double border-[#3d2817] pb-6 mb-10">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <p className="text-xs tracking-[0.4em] text-[#7a5c3a] uppercase mb-1">Vol. 01 · Est. 2026 · The Slow Fashion Chronicle</p>
+              <h1 className="display-font text-5xl md:text-7xl font-black tracking-tight text-[#3d2817]" style={{ letterSpacing: "-0.02em" }}>
+                Wear <span className="italic">don't</span> Tear
+              </h1>
+              <p className="text-[#5c4028] italic mt-2 text-lg">Dress the part. Spare the planet. ❧</p>
+            </div>
+            <div className="text-right border-l-2 border-[#3d2817] pl-4">
+              <p className="text-xs uppercase tracking-widest text-[#7a5c3a]">Your Impact</p>
+              <p className="text-3xl font-black text-[#3d2817]">{totalImpact.water.toLocaleString()}L</p>
+              <p className="text-xs text-[#5c4028]">water saved · {totalImpact.co2}kg CO₂ · {totalImpact.items} pieces</p>
+            </div>
+          </div>
+        </header>
 
-        const demoText = demoResponses[contentType] || demoResponses.story;
-        const personalizedResponse = `Based on your prompt "${prompt}":\n\n${demoText}`;
-        
-        setResult(personalizedResponse);
-        setLoading(false);
-      };
+        <div className="flex gap-0 mb-8 border-b-2 border-[#3d2817] flex-wrap">
+          {[
+            { id: "style", label: "Style Quiz" },
+            { id: "event", label: "Event Styling" },
+            { id: "remix", label: "Remix Your Closet" },
+            { id: "impact", label: "Your Closet Impact" },
+          ].map((tab) => {
+            const active = activeTab === tab.id;
+            return (
+              <button key={tab.id} onClick={() => { setActiveTab(tab.id); setRecommendations(null); }}
+                className={`px-6 py-3 text-sm uppercase tracking-widest font-bold transition-all ${active ? "bg-[#3d2817] text-[#f4ead5]" : "text-[#3d2817] hover:bg-[#3d2817]/10"}`}>
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
 
-      const handleKeyPress = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          generateContent();
-        }
-      };
+        {activeTab === "style" && (
+          <div className="grid md:grid-cols-5 gap-8">
+            <div className="md:col-span-2">
+              <div className="bg-[#faf3e0] border-2 border-[#3d2817] p-6" style={{ boxShadow: "6px 6px 0px 0px #3d2817" }}>
+                <h2 className="display-font text-2xl font-black text-[#3d2817] mb-1">Find your look.</h2>
+                <p className="text-sm text-[#5c4028] italic mb-6">Answer four quick questions.</p>
 
-      return React.createElement('div', { className: "min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-6" },
-        React.createElement('div', { className: "max-w-4xl mx-auto" },
-          React.createElement('div', { className: "text-center mb-8" },
-            React.createElement('h1', { className: "text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2" }, '✨ Creative Content Generator'),
-            React.createElement('p', { className: "text-gray-600" }, 'Bring your ideas to life with AI-powered creativity'),
-            React.createElement('div', { className: "mt-2 text-xs text-purple-600 bg-purple-50 inline-block px-3 py-1 rounded-full" }, '🎭 Demo Mode - Showcasing example outputs')
-          ),
-          React.createElement('div', { className: "bg-white rounded-2xl shadow-xl p-8 mb-6" },
-            React.createElement('div', { className: "mb-6" },
-              React.createElement('label', { className: "block text-sm font-medium text-gray-700 mb-3" }, 'What would you like to create?'),
-              React.createElement('div', { className: "grid grid-cols-2 md:grid-cols-3 gap-3" },
-                contentTypes.map(type =>
-                  React.createElement('button', {
-                    key: type.id,
-                    onClick: () => setContentType(type.id),
-                    className: `px-4 py-3 rounded-lg font-medium transition-all ${contentType === type.id ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`
-                  }, type.label)
-                )
-              )
-            ),
-            React.createElement('div', { className: "mb-6" },
-              React.createElement('label', { className: "block text-sm font-medium text-gray-700 mb-2" }, 'Your creative prompt'),
-              React.createElement('textarea', {
-                value: prompt,
-                onChange: (e) => setPrompt(e.target.value),
-                onKeyPress: handleKeyPress,
-                placeholder: currentType?.placeholder,
-                className: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none",
-                rows: 3
-              })
-            ),
-            React.createElement('button', {
-              onClick: generateContent,
-              disabled: loading || !prompt.trim(),
-              className: "w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            }, loading ? '⏳ Generating...' : `✨ Generate ${currentType?.label}`)
-          ),
-          result && React.createElement('div', { className: "bg-white rounded-2xl shadow-xl p-8" },
-            React.createElement('h2', { className: "text-xl font-bold text-gray-800 mb-4" }, `✨ Your ${currentType?.label}`),
-            React.createElement('p', { className: "text-gray-700 whitespace-pre-wrap leading-relaxed" }, result)
-          ),
-          React.createElement('div', { className: "text-center mt-8 text-sm text-gray-500" },
-            React.createElement('p', {}, '💡 This is a demo version with example content.'),
-            React.createElement('p', { className: "mt-1" }, 'For fully AI-powered generation, use this tool in Claude.ai!')
-          )
-        )
-      );
-    }
+                <QuizQuestion label="What aesthetic feels most like you?" value={styleAnswers.aesthetic} onChange={(v) => setStyleAnswers({ ...styleAnswers, aesthetic: v })}
+                  options={[
+                    { value: "cottagecore", label: "Cottagecore / romantic" },
+                    { value: "dark-academia", label: "Dark academia / scholar" },
+                    { value: "minimalist", label: "'90s minimalist / clean" },
+                    { value: "coastal", label: "Coastal grandma / breezy" },
+                    { value: "y2k", label: "Y2K / playful" },
+                    { value: "streetwear", label: "Streetwear / downtown" },
+                    { value: "grunge", label: "Grunge / layered" },
+                    { value: "boho", label: "Boho / free-spirit" },
+                    { value: "preppy", label: "Preppy / classic" },
+                    { value: "utility", label: "Gorpcore / utility" },
+                  ]} />
 
-    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(CreativeContentGenerator));
-  </script>
+                <QuizQuestion label="Colors you actually wear?" value={styleAnswers.color} onChange={(v) => setStyleAnswers({ ...styleAnswers, color: v })}
+                  options={[
+                    { value: "neutral", label: "Neutrals (cream, tan, black, navy)" },
+                    { value: "earthy", label: "Earthy (rust, olive, brown, mustard)" },
+                    { value: "pastel", label: "Pastels (sage, blush, butter)" },
+                    { value: "dark", label: "Dark moody (charcoal, burgundy, forest)" },
+                    { value: "bright", label: "Bright & bold" },
+                  ]} />
+
+                <QuizQuestion label="Dress code range?" value={styleAnswers.formality} onChange={(v) => setStyleAnswers({ ...styleAnswers, formality: v })}
+                  options={[
+                    { value: "casual", label: "Very casual (jeans & tees)" },
+                    { value: "smart-casual", label: "Smart casual (polished but relaxed)" },
+                    { value: "formal", label: "Formal / dressed up" },
+                  ]} />
+
+                <QuizQuestion label="Current season?" value={styleAnswers.season} onChange={(v) => setStyleAnswers({ ...styleAnswers, season: v })}
+                  options={[
+                    { value: "spring", label: "Spring" },
+                    { value: "summer", label: "Summer" },
+                    { value: "fall", label: "Fall" },
+                    { value: "winter", label: "Winter" },
+                  ]} />
+
+                <div className="flex gap-2 mt-4">
+                  <button onClick={getStyleRecs} disabled={!styleAnswers.aesthetic.length}
+                    className="flex-1 bg-[#3d2817] text-[#f4ead5] py-4 font-bold uppercase tracking-widest text-sm hover:bg-[#5c4028] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    Get my outfits →
+                  </button>
+                  {hasSelections(styleAnswers) && (
+                    <button onClick={resetStyle} className="bg-[#f4ead5] text-[#3d2817] border-2 border-[#3d2817] px-4 font-bold uppercase tracking-widest text-sm hover:bg-[#d4a574] transition-colors">
+                      Reset
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6 bg-[#3d2817] text-[#f4ead5] p-5 relative">
+                <div className="absolute -top-3 left-4 bg-[#d4a574] text-[#3d2817] px-2 py-0.5 text-xs uppercase tracking-widest font-bold">Did you know?</div>
+                <p className="text-sm leading-relaxed italic">
+                  The fashion industry produces 10% of global CO₂ emissions — more than international flights and shipping combined. Every secondhand piece you choose is a quiet rebellion.
+                </p>
+              </div>
+            </div>
+
+            <div className="md:col-span-3">
+              {!recommendations && (
+                <div className="border-2 border-dashed border-[#3d2817]/40 p-12 text-center">
+                  <div className="text-5xl mb-4">✦</div>
+                  <p className="display-font text-[#5c4028] italic text-lg">"Buy less, choose well, make it last."</p>
+                  <p className="text-xs uppercase tracking-widest text-[#7a5c3a] mt-2">— Vivienne Westwood</p>
+                </div>
+              )}
+              {recommendations?.type === "style" && (
+                <div className="space-y-6">
+                  <div className="bg-[#d4a574] border-2 border-[#3d2817] p-5">
+                    <p className="text-xs uppercase tracking-widest font-bold text-[#3d2817] mb-2">Your Matches</p>
+                    <p className="text-[#3d2817] italic">{recommendations.outfits.length} thrifted looks based on your taste. Hit "Get my outfits" again for fresh picks.</p>
+                  </div>
+                  {recommendations.outfits.map((outfit, i) => (
+                    <OutfitCard key={`${outfit.name}-${i}`} outfit={outfit} index={i} onSave={saveOutfit} shoppingLinks={shoppingLinks} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "event" && (
+          <div className="grid md:grid-cols-5 gap-8">
+            <div className="md:col-span-2">
+              <div className="bg-[#faf3e0] border-2 border-[#3d2817] p-6" style={{ boxShadow: "6px 6px 0px 0px #3d2817" }}>
+                <h2 className="display-font text-2xl font-black text-[#3d2817] mb-1">Where are you going?</h2>
+                <p className="text-sm text-[#5c4028] italic mb-6">Pick your event. We'll suggest thrifted outfits.</p>
+
+                <QuizQuestion label="The event" value={eventAnswers.event} onChange={(v) => setEventAnswers({ ...eventAnswers, event: v })}
+                  options={[
+                    { value: "wedding", label: "Wedding (guest)" },
+                    { value: "interview", label: "Job interview" },
+                    { value: "date", label: "First date" },
+                    { value: "party", label: "Cocktail party / formal" },
+                    { value: "concert", label: "Concert / show" },
+                    { value: "gallery", label: "Gallery opening / creative" },
+                    { value: "brunch", label: "Brunch / casual hangout" },
+                    { value: "outdoors", label: "Outdoor activity" },
+                  ]} />
+
+                <QuizQuestion label="Your usual vibe (optional)" value={eventAnswers.style} onChange={(v) => setEventAnswers({ ...eventAnswers, style: v })}
+                  options={[
+                    { value: "", label: "No strong preference" },
+                    { value: "minimalist", label: "Minimalist / clean" },
+                    { value: "romantic", label: "Romantic / soft" },
+                    { value: "streetwear", label: "Streetwear / edgy" },
+                    { value: "classic", label: "Classic / timeless" },
+                    { value: "boho", label: "Boho / relaxed" },
+                  ]} />
+
+                <div className="flex gap-2 mt-4">
+                  <button onClick={getEventRecs} disabled={!eventAnswers.event.length}
+                    className="flex-1 bg-[#3d2817] text-[#f4ead5] py-4 font-bold uppercase tracking-widest text-sm hover:bg-[#5c4028] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    Style me →
+                  </button>
+                  {hasSelections(eventAnswers) && (
+                    <button onClick={resetEvent} className="bg-[#f4ead5] text-[#3d2817] border-2 border-[#3d2817] px-4 font-bold uppercase tracking-widest text-sm hover:bg-[#d4a574] transition-colors">
+                      Reset
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6 bg-[#3d2817] text-[#f4ead5] p-5 relative">
+                <div className="absolute -top-3 left-4 bg-[#d4a574] text-[#3d2817] px-2 py-0.5 text-xs uppercase tracking-widest font-bold">A Gentle Reminder</div>
+                <p className="text-sm leading-relaxed italic">
+                  85% of textiles end up in landfills each year. Your "one-night-only" outfit from a fast fashion haul will outlive all of us. Rent, thrift, or remix what you own.
+                </p>
+              </div>
+            </div>
+
+            <div className="md:col-span-3">
+              {!recommendations && (
+                <div className="border-2 border-dashed border-[#3d2817]/40 p-12 text-center">
+                  <div className="text-5xl mb-4">✦</div>
+                  <p className="display-font text-[#5c4028] italic text-lg">"Fashion fades. Style is eternal."</p>
+                  <p className="text-xs uppercase tracking-widest text-[#7a5c3a] mt-2">— Yves Saint Laurent</p>
+                </div>
+              )}
+              {recommendations?.type === "event" && (
+                <div className="space-y-6">
+                  <div className="bg-[#d4a574] border-2 border-[#3d2817] p-5">
+                    <p className="text-xs uppercase tracking-widest font-bold text-[#3d2817] mb-2">Your Event Picks</p>
+                    <p className="text-[#3d2817] italic">Three thrifted looks for {recommendations.eventType.join(", ")}. Refresh for alternatives.</p>
+                  </div>
+                  {recommendations.outfits.map((outfit, i) => (
+                    <OutfitCard key={`${outfit.name}-${i}`} outfit={outfit} index={i} onSave={saveOutfit} shoppingLinks={shoppingLinks} isEvent />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "remix" && (
+          <div className="grid md:grid-cols-5 gap-8">
+            <div className="md:col-span-2">
+              <div className="bg-[#faf3e0] border-2 border-[#3d2817] p-6" style={{ boxShadow: "6px 6px 0px 0px #3d2817" }}>
+                <h2 className="display-font text-2xl font-black text-[#3d2817] mb-1">The orphan in your closet.</h2>
+                <p className="text-sm text-[#5c4028] italic mb-6">You know the piece — the one you bought or inherited, then had no idea what to do with. Pick it below.</p>
+
+                <QuizQuestion label="What piece is gathering dust?" value={remixPiece} onChange={setRemixPiece}
+                  options={[
+                    { value: "oversized-blazer", label: "Oversized blazer" },
+                    { value: "slip-dress", label: "Slip dress" },
+                    { value: "graphic-tee", label: "Graphic / band tee" },
+                    { value: "vintage-jeans", label: "Vintage jeans" },
+                    { value: "flannel-shirt", label: "Flannel shirt" },
+                    { value: "statement-skirt", label: "Statement skirt" },
+                    { value: "chunky-sweater", label: "Chunky knit sweater" },
+                    { value: "silk-scarf", label: "Silk scarf" },
+                    { value: "leather-jacket", label: "Leather jacket" },
+                    { value: "patterned-pants", label: "Patterned pants" },
+                    { value: "thrifted-scarf-bag-etc", label: "Accessories / jewelry" },
+                  ]} />
+
+                <div className="flex gap-2 mt-4">
+                  <button onClick={getRemixIdeas} disabled={!remixPiece.length}
+                    className="flex-1 bg-[#3d2817] text-[#f4ead5] py-4 font-bold uppercase tracking-widest text-sm hover:bg-[#5c4028] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    Give me ideas →
+                  </button>
+                  {remixPiece.length > 0 && (
+                    <button onClick={resetRemix} className="bg-[#f4ead5] text-[#3d2817] border-2 border-[#3d2817] px-4 font-bold uppercase tracking-widest text-sm hover:bg-[#d4a574] transition-colors">
+                      Reset
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6 bg-[#3d2817] text-[#f4ead5] p-5 relative">
+                <div className="absolute -top-3 left-4 bg-[#d4a574] text-[#3d2817] px-2 py-0.5 text-xs uppercase tracking-widest font-bold">The real move</div>
+                <p className="text-sm leading-relaxed italic">
+                  The most sustainable garment is the one already in your closet. Extending a piece's life by just nine months cuts its environmental footprint by roughly a third.
+                </p>
+              </div>
+            </div>
+
+            <div className="md:col-span-3">
+              {!recommendations && (
+                <div className="border-2 border-dashed border-[#3d2817]/40 p-12 text-center">
+                  <div className="text-5xl mb-4">✦</div>
+                  <p className="display-font text-[#5c4028] italic text-lg">"The best outfit is one you already own."</p>
+                  <p className="text-xs uppercase tracking-widest text-[#7a5c3a] mt-2">— Slow fashion, loosely paraphrased</p>
+                </div>
+              )}
+              {recommendations?.type === "remix" && (
+                <div className="space-y-6">
+                  <div className="bg-[#d4a574] border-2 border-[#3d2817] p-5">
+                    <p className="text-xs uppercase tracking-widest font-bold text-[#3d2817] mb-2">Four ways to wear it</p>
+                    <p className="text-[#3d2817] italic">Each of these uses things you likely already own. No buying required.</p>
+                  </div>
+                  {recommendations.ideas.map((idea, i) => (
+                    <RemixCard key={`${idea.title}-${i}`} idea={idea} index={i} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "impact" && (
+          <div>
+            <div className="grid md:grid-cols-3 gap-6 mb-10">
+              <ImpactCard value={totalImpact.water.toLocaleString()} unit="liters" label="Water Saved" context="One cotton t-shirt takes ~2,700L — enough drinking water for one person for 2.5 years." />
+              <ImpactCard value={totalImpact.co2} unit="kg" label="CO₂ Avoided" context={`Equivalent to driving ${Math.round(totalImpact.co2 * 4)} miles in an average car.`} />
+              <ImpactCard value={totalImpact.items} unit="pieces" label="Diverted from Landfill" context="The avg American throws out ~37kg of textiles per year. Every rescued piece counts." />
+            </div>
+
+            <div className="bg-[#faf3e0] border-2 border-[#3d2817] p-8">
+              <h2 className="display-font text-3xl font-black text-[#3d2817] mb-6">Your saved looks</h2>
+              {savedItems.length === 0 ? (
+                <p className="text-[#5c4028] italic">No saved outfits yet. Head to Style Quiz or Event Styling to start building your secondhand wishlist — or try Remix Your Closet for zero-cost styling ideas.</p>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {savedItems.map((item) => (
+                    <div key={item.id} className="border-2 border-[#3d2817] bg-[#f4ead5] p-4">
+                      <p className="font-black text-[#3d2817] text-lg">{item.name}</p>
+                      <p className="text-xs uppercase tracking-widest text-[#7a5c3a] mb-3">
+                        {item.water.toLocaleString()}L water · {item.co2}kg CO₂
+                      </p>
+                      <ul className="text-sm text-[#5c4028] space-y-1">
+                        {item.pieces.map((p, i) => <li key={i}>— {p}</li>)}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 text-xs text-[#7a5c3a] italic text-center">
+              Estimates based on figures from UN Environment Programme, WRAP UK, and Ellen MacArthur Foundation reports on textile production impact.
+            </div>
+          </div>
+        )}
+
+        <footer className="mt-16 pt-8 border-t-2 border-[#3d2817] text-center">
+          <p className="text-xs uppercase tracking-[0.3em] text-[#7a5c3a]">Dressed by the past · Built for the future</p>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+function QuizQuestion({ label, options, value, onChange }) {
+  return (
+    <div className="mb-5">
+      <label className="text-xs uppercase tracking-widest text-[#7a5c3a] font-bold mb-2 block">{label}</label>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((opt) => {
+          const selected = Array.isArray(value) ? value.includes(opt.value) : value === opt.value;
+          const handleOptionClick = () => {
+            if (Array.isArray(value)) {
+              const nextValue = selected
+                ? value.filter((item) => item !== opt.value)
+                : [...value, opt.value];
+              onChange(nextValue);
+              return;
+            }
+            onChange(opt.value);
+          };
+          return (
+            <button key={opt.value} onClick={handleOptionClick}
+              className={`text-xs px-3 py-2 border-2 border-[#3d2817] transition-all ${selected ? "bg-[#3d2817] text-[#f4ead5]" : "bg-[#f4ead5] text-[#3d2817] hover:bg-[#d4a574]"}`}>
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function OutfitCard({ outfit, index, onSave, shoppingLinks }) {
+  const [saved, setSaved] = useState(false);
+  const handleSave = () => { if (saved) return; onSave(outfit); setSaved(true); };
+  return (
+    <div className="bg-[#faf3e0] border-2 border-[#3d2817] p-6 relative" style={{ boxShadow: "4px 4px 0px 0px #3d2817" }}>
+      <div className="absolute -top-3 -left-2 bg-[#3d2817] text-[#f4ead5] w-8 h-8 flex items-center justify-center font-black text-sm" style={{ transform: "rotate(-3deg)" }}>
+        {String(index + 1).padStart(2, "0")}
+      </div>
+      <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
+        <div>
+          <h3 className="display-font text-2xl font-black text-[#3d2817]">{outfit.name}</h3>
+          <p className="text-xs uppercase tracking-widest text-[#7a5c3a] italic">{outfit.vibe}</p>
+        </div>
+        <button onClick={handleSave} disabled={saved}
+          className={`text-xs uppercase tracking-widest font-bold px-3 py-1.5 border-2 border-[#3d2817] transition-all ${saved ? "bg-[#3d5a3d] text-[#f4ead5]" : "bg-[#d4a574] text-[#3d2817] hover:bg-[#3d2817] hover:text-[#f4ead5]"}`}>
+          {saved ? "✓ Saved" : "Save look"}
+        </button>
+      </div>
+      <ul className="mb-4 space-y-1.5">
+        {outfit.pieces.map((piece, i) => (
+          <li key={i} className="text-[#3d2817] flex gap-2"><span className="text-[#7a5c3a]">§</span><span>{piece}</span></li>
+        ))}
+      </ul>
+      <div className="border-t border-[#3d2817]/30 pt-3 mb-4">
+        <p className="text-xs uppercase tracking-widest text-[#7a5c3a] font-bold mb-1">Thrift tip</p>
+        <p className="text-sm text-[#5c4028] italic">{outfit.thriftTips}</p>
+      </div>
+      <div>
+        <p className="text-xs uppercase tracking-widest text-[#7a5c3a] font-bold mb-2">Shop secondhand</p>
+        <div className="flex flex-wrap gap-2">
+          {shoppingLinks(outfit.searchTerms).map((link) => (
+            <a key={link.name} href={link.url} target="_blank" rel="noopener noreferrer"
+              className={`${link.color} text-[#f4ead5] text-xs uppercase tracking-widest font-bold px-3 py-1.5 hover:opacity-80 transition-opacity`}>
+              {link.name}
+            </a>
+          ))}
+        </div>
+        {outfit.searchTerms && (
+          <p className="text-xs text-[#7a5c3a] italic mt-2">Try searching: "{outfit.searchTerms.join('", "')}"</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function RemixCard({ idea, index }) {
+  return (
+    <div className="bg-[#faf3e0] border-2 border-[#3d2817] p-6 relative" style={{ boxShadow: "4px 4px 0px 0px #3d2817" }}>
+      <div className="absolute -top-3 -left-2 bg-[#3d2817] text-[#f4ead5] w-8 h-8 flex items-center justify-center font-black text-sm" style={{ transform: "rotate(-3deg)" }}>
+        {String(index + 1).padStart(2, "0")}
+      </div>
+      <h3 className="display-font text-2xl font-black text-[#3d2817] mb-3">{idea.title}</h3>
+      <div className="mb-4">
+        <p className="text-xs uppercase tracking-widest text-[#7a5c3a] font-bold mb-1">How to wear it</p>
+        <p className="text-[#3d2817] leading-relaxed">{idea.recipe}</p>
+      </div>
+      <div className="border-t border-[#3d2817]/30 pt-3">
+        <p className="text-xs uppercase tracking-widest text-[#7a5c3a] font-bold mb-1">Why it works</p>
+        <p className="text-sm text-[#5c4028] italic">{idea.why}</p>
+      </div>
+    </div>
+  );
+}
+
+function ImpactCard({ value, unit, label, context }) {
+  return (
+    <div className="bg-[#faf3e0] border-2 border-[#3d2817] p-6" style={{ boxShadow: "4px 4px 0px 0px #3d2817" }}>
+      <div className="text-3xl mb-3 text-[#3d5a3d]">❦</div>
+      <p className="text-xs uppercase tracking-widest text-[#7a5c3a] font-bold mb-1">{label}</p>
+      <p className="display-font text-5xl font-black text-[#3d2817] leading-none">{value}</p>
+      <p className="text-xs uppercase tracking-widest text-[#7a5c3a] mt-1 mb-3">{unit}</p>
+      <p className="text-xs text-[#5c4028] italic border-t border-[#3d2817]/30 pt-3">{context}</p>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
 </body>
 </html>
