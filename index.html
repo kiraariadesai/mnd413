@@ -239,6 +239,7 @@ function App() {
   const [styleAnswers, setStyleAnswers] = useState(STYLE_DEFAULTS);
   const [eventAnswers, setEventAnswers] = useState(EVENT_DEFAULTS);
   const [remixPiece, setRemixPiece] = useState([]);
+  const [remixCustomPiece, setRemixCustomPiece] = useState("");
   const [recommendations, setRecommendations] = useState(null);
   const [savedItems, setSavedItems] = useState([]);
   const [totalImpact, setTotalImpact] = useState({ water: 0, co2: 0, items: 0 });
@@ -258,13 +259,37 @@ function App() {
   };
   const resetStyle = () => { setStyleAnswers(STYLE_DEFAULTS); setRecommendations(null); };
   const resetEvent = () => { setEventAnswers(EVENT_DEFAULTS); setRecommendations(null); };
-  const resetRemix = () => { setRemixPiece([]); setRecommendations(null); };
+  const resetRemix = () => { setRemixPiece([]); setRemixCustomPiece(""); setRecommendations(null); };
 
   const getRemixIdeas = () => {
-    if (!remixPiece.length) return;
+    const customLabel = remixCustomPiece.trim();
+    if (!remixPiece.length && !customLabel) return;
     const ideas = remixPiece.flatMap((piece) =>
       (REMIX_LIBRARY[piece] || []).map((idea) => ({ ...idea, piece })),
     );
+    if (customLabel) {
+      const safeCustomLabel = customLabel.toLowerCase();
+      ideas.push(
+        {
+          piece: "custom",
+          title: "Anchor + balance",
+          recipe: `Style your ${safeCustomLabel} with a simple base (white tee, black tank, or button-down), then add one structured layer like a blazer or denim jacket.`,
+          why: "When one item feels hard to style, neutral basics make it look intentional fast.",
+        },
+        {
+          piece: "custom",
+          title: "Repeat one color",
+          recipe: `Pull one color from your ${safeCustomLabel} and repeat it in your shoes, bag, or jewelry so the outfit feels connected.`,
+          why: "Repeating color is the easiest styling trick to make mixed pieces look cohesive.",
+        },
+        {
+          piece: "custom",
+          title: "Dress it up / down test",
+          recipe: `Try your ${safeCustomLabel} once with casual pieces (sneakers, relaxed denim) and once with polished pieces (loafers/heels, tailored pants), then keep the version that feels most like you.`,
+          why: "Testing both directions helps you find realistic outfits you'll actually re-wear.",
+        },
+      );
+    }
     if (!ideas.length) return;
     setRecommendations({ type: "remix", piece: remixPiece, ideas });
   };
@@ -508,13 +533,25 @@ function App() {
                     { value: "patterned-pants", label: "Patterned pants" },
                     { value: "thrifted-scarf-bag-etc", label: "Accessories / jewelry" },
                   ]} />
+                <div className="mt-4">
+                  <label className="text-xs uppercase tracking-widest text-[#7a5c3a] font-bold mb-2 block">
+                    Or type your own orphan piece
+                  </label>
+                  <input
+                    type="text"
+                    value={remixCustomPiece}
+                    onChange={(e) => setRemixCustomPiece(e.target.value)}
+                    placeholder="e.g., sequin top, leather midi skirt, neon cardigan"
+                    className="w-full bg-[#f4ead5] text-[#3d2817] border-2 border-[#3d2817] px-3 py-2 text-sm placeholder:text-[#7a5c3a]/70"
+                  />
+                </div>
 
                 <div className="flex gap-2 mt-4">
-                  <button onClick={getRemixIdeas} disabled={!remixPiece.length}
+                  <button onClick={getRemixIdeas} disabled={!remixPiece.length && !remixCustomPiece.trim()}
                     className="flex-1 bg-[#3d2817] text-[#f4ead5] py-4 font-bold uppercase tracking-widest text-sm hover:bg-[#5c4028] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                     Give me ideas →
                   </button>
-                  {remixPiece.length > 0 && (
+                  {(remixPiece.length > 0 || remixCustomPiece.trim()) && (
                     <button onClick={resetRemix} className="bg-[#f4ead5] text-[#3d2817] border-2 border-[#3d2817] px-4 font-bold uppercase tracking-widest text-sm hover:bg-[#d4a574] transition-colors">
                       Reset
                     </button>
@@ -705,3 +742,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 </body>
 </html>
+ 
